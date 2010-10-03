@@ -1,6 +1,6 @@
 
 PROJECT(libjpeg C)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 INCLUDE(dist.cmake)
 
 # generating config.h file:
