@@ -5,36 +5,44 @@
 # Since CMake is not directly supported we use erlang VMs
 language: erlang
 
-# Try using multiple Lua Implementations
 env:
-  - LUA=""             # Use automatic dependencies
-  - LUA="luajit"       # Try with LuaJIT
-# - CMAKE="-DCMAKE_VARIABLE=value"
-# - LUA="lua-5.1.5"
+  - TOOL=""
+  - TOOL="i686-w64-mingw32-"    # 32-bit mingw
+  - TOOL="x86_64-w64-mingw32-"  # 64-bit mingw
+  - TOOL="arm-linux-gnueabihf-" # ARM hard-float (hf), linux
+  - COMPILER="clang"            # clang
+# - TOOL="i586-mingw32msvc-"    # old 32-bit mingw
 
-# Allow luajit to fail
-matrix:
-  allow_failures:
-    - env: LUA="luajit"
-
-# We need CMake and LuaDist
+# We need CMake and toolchains.
 install:
-  - export MODULE=`basename $PWD`
-  - sudo apt-get install cmake >/dev/null 2>&1
-  - git clone git://github.com/LuaDist/bootstrap.git _luadist >/dev/null 2>&1
-  - cd _luadist
-  - git submodule update --init >/dev/null 2>&1
-  - ./bootstrap >/dev/null 2>&1
-  - export LUADIST=$PWD/_install/bin/luadist
-  - cd $HOME
+  - sudo apt-get -qq install cmake
+  - if [ "$TOOL" == "i586-mingw32msvc-" ]; then sudo apt-get -qq install gcc-mingw32; fi
+  - if [ "$TOOL" == "x86_64-w64-mingw32-" -o "$TOOL" == "i686-w64-mingw32-" ]; then sudo apt-get -qq install gcc-mingw-w64; fi
+  - if [ "$TOOL" == "arm-linux-gnueabihf-" ]; then sudo apt-get -qq install gcc-arm-linux-gnueabihf; fi
+  - if [ "$COMPILER" == "clang" ]; then sudo apt-get -qq install clang; export CC=clang; fi
+  - export TOOLFILE="$HOME/$TOOL.cmake"
+  - echo '' > $TOOLFILE
+  - echo "set(_toolchain $TOOL)" >> $TOOLFILE
+  - if [ "$TOOL" == "arm-linux-gnueabihf-" ]; then export SYSTEM="Linux"; else export SYSTEM="Windows"; fi
+  - echo "set(CMAKE_SYSTEM_NAME $SYSTEM)" >> $TOOLFILE
+  - echo 'set(CMAKE_C_COMPILER ${_toolchain}gcc)' >> $TOOLFILE
+  - echo 'set(CMAKE_CXX_COMPILER ${_toolchain}g++)' >> $TOOLFILE
+  - echo 'set(CMAKE_RC_COMPILER ${_toolchain}windres )' >> $TOOLFILE
+  - echo 'set(CMAKE_RC_OUTPUT_EXTENSION .obj)' >> $TOOLFILE
+  - echo 'set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> <DEFINES> <SOURCE> <OBJECT>")' >> $TOOLFILE
+  - echo 'set(CMAKE_FIND_ROOT_PATH /usr/${_toolchain}/ ${CMAKE_INSTALL_PREFIX})' >> $TOOLFILE
+  - echo 'set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> $TOOLFILE
+  - echo 'set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> $TOOLFILE
 
-# Use LuaDist to deploy the module
+
+# Use CMake to build module.
 script:
-  - $LUADIST _test install $LUA $MODULE-scm $CMAKE -verbose=true -test=true
-
-# Execute additional tests or commands
-#after_script:
-#  - [run additional test commans]
+  - mkdir _build _install && cd _build
+  - if [ $TOOL ]; then export TOOLARG="-DCMAKE_TOOLCHAIN_FILE=$TOOLFILE"; fi
+  - cmake $TOOLARG -DCMAKE_INSTALL_PREFIX=../_install ..
+  - make
+  - if [ ! $TOOL ]; then make test; fi
+  - make install
 
 # Only watch the master branch
 branches:
