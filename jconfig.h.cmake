@@ -1,11 +1,7 @@
-//
-// Based on jconfig.doc, here we substitute in a couple of symbols
-// detected with CMake.  We can do more but it's probably overkill
-// as most compilers support these options today.
-// 
+/* based on jconfig.txt */
 
 /*
- * jconfig.doc
+ * jconfig.txt
  *
  * Copyright (C) 1991-1994, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
@@ -27,7 +23,7 @@
  */
 
 /* Does your compiler support function prototypes?
- * (If not, you also need to use ansi2knr, see install.doc)
+ * (If not, you also need to use ansi2knr, see install.txt)
  */
 #define HAVE_PROTOTYPES
 
@@ -94,13 +90,11 @@
  */
 #undef INCOMPLETE_TYPES_BROKEN
 
-// Here we use some code grabbed from jconfig.vc for MSVC compilers
-// In windows BOOLEAN is a uint8 so "boolean" is typedef to a uint8
-// here before jmorecfg.h can typedef it as an int.
+/* from jconfig.vc */
 #ifdef _MSC_VER
   /* Define "boolean" as unsigned char, not int, per Windows custom */
   #ifndef __RPCNDR_H__		/* don't conflict if rpcndr.h already read */
-    typedef unsigned char boolean;
+  typedef unsigned char boolean;
   #endif
   #define HAVE_BOOLEAN		/* prevent jmorecfg.h from redefining it */
 #endif

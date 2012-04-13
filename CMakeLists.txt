@@ -1,102 +1,118 @@
+# Copyright (C) 2007-2012 LuaDist.
+# Created by Peter Kapec, David Manura
+# Redistribution and use of this file is allowed according to the terms of the MIT license.
+# For details see the COPYRIGHT file distributed with LuaDist.
+# Please note that the package source code is licensed under its own license.
 
-PROJECT(libjpeg C)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-INCLUDE(dist.cmake)
+project(libjpeg C)
+cmake_minimum_required(VERSION 2.6)
+include(cmake/dist.cmake)
 
-# generating config.h file:
-MESSAGE("Configure: JPEG - generating jconfig.h:")
-	INCLUDE(CheckIncludeFile)
-	
-	CHECK_INCLUDE_FILE(stddef.h HAVE_STDDEF_H)
-	CHECK_INCLUDE_FILE(stdlib.h HAVE_STDLIB_H)
-	
-	IF(WIN32)
-		# This is for jpeg binaries and is #defined in jconfig.h
-		SET(TWO_FILE_COMMANDLINE true)
-	ENDIF()
-	
-	CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/jconfig.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/jconfig.h)
+include(CheckIncludeFile)
+check_include_file(stddef.h HAVE_STDDEF_H)
+check_include_file(stdlib.h HAVE_STDLIB_H)
+if(WIN32 AND NOT CYGWIN)  #improve? see jconfig.*
+	set(TWO_FILE_COMMANDLINE true) # jconfig.h
+endif()
+configure_file(jconfig.h.cmake jconfig.h)
 
-MESSAGE("Configure: JPEG - done.")
-# end of generating jconfig.h file:
+include_directories(${CMAKE_CURRENT_BINARY_DIR}) # jconfig.h
 
-
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-
-IF(MSVC)
-    SET(CMAKE_DEBUG_POSTFIX "D")
-ENDIF()
-
-SET(JPEG_PUBLIC_HDRS
-    jerror.h
-    jmorecfg.h
-    jpeglib.h
-    ${CMAKE_CURRENT_BINARY_DIR}/jconfig.h
-)
-SET(JPEG_PRIVATE_HDRS
-    cderror.h
-    cdjpeg.h
-    jdct.h
-    jinclude.h
-    jmemsys.h
-    jpegint.h
-    jversion.h
-    transupp.h
+set(HEADERS
+	jerror.h
+	jmorecfg.h
+	jpeglib.h
+	${CMAKE_CURRENT_BINARY_DIR}/jconfig.h
 )
 
-# memmgr back ends: compile only one of these into a working library
-# (For now, let's use the mode that requires the image fit into memory.
-# This is the recommended mode for Win32 anyway.)
-SET(JPEG_systemdependent_SRCS jmemnobs.c)
+set(SRC
+	jmemnobs.c
+	jaricom.c
+	jcapimin.c
+	jcapistd.c
+	jcarith.c
+	jccoefct.c
+	jccolor.c
+	jcdctmgr.c
+	jchuff.c
+	jcinit.c
+	jcmainct.c
+	jcmarker.c
+	jcmaster.c
+	jcomapi.c
+	jcparam.c
+	jcprepct.c
+	jcsample.c
+	jctrans.c
+	jdapimin.c
+	jdapistd.c
+	jdarith.c
+	jdatadst.c
+	jdatasrc.c
+	jdcoefct.c
+	jdcolor.c
+	jddctmgr.c
+	jdhuff.c
+	jdinput.c
+	jdmainct.c
+	jdmarker.c
+	jdmaster.c
+	jdmerge.c
+	jdpostct.c
+	jdsample.c
+	jdtrans.c
+	jerror.c
+	jfdctflt.c
+	jfdctfst.c
+	jfdctint.c
+	jidctflt.c
+	jidctfst.c
+	jidctint.c
+	jquant1.c
+	jquant2.c
+	jutils.c
+	jmemmgr.c
+	cderror.h
+	cdjpeg.h
+	jdct.h
+	jinclude.h
+	jmemsys.h
+	jpegint.h
+	jversion.h
+	transupp.h
+)
 
-SET(JPEG_SRCS
-    jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c
-    jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c
-    jcomapi.c jcparam.c jcprepct.c jcsample.c jctrans.c jdapimin.c
-    jdapistd.c jdarith.c jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c
-    jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c
-    jdmerge.c jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c
-    jfdctfst.c jfdctint.c jidctflt.c jidctfst.c jidctint.c jquant1.c
-    jquant2.c jutils.c jmemmgr.c)
+add_library(jpeg SHARED ${SRC} ${HEADERS})
 
-ADD_LIBRARY(jpeg SHARED ${JPEG_systemdependent_SRCS} ${JPEG_SRCS} ${JPEG_PUBLIC_HDRS} ${JPEG_PRIVATE_HDRS})
-#~ SET_TARGET_PROPERTIES(jpeg PROPERTIES VERSION 7.0.0)
-#~ SET_TARGET_PROPERTIES(jpeg PROPERTIES SOVERSION 7)
+add_executable(cjpeg cdjpeg.c cjpeg.c rdbmp.c rdgif.c rdppm.c rdrle.c rdtarga.c rdswitch.c)
+add_executable(djpeg cdjpeg.c djpeg.c wrbmp.c wrgif.c wrppm.c wrrle.c wrtarga.c rdcolmap.c)
+add_executable(jpegtran jpegtran.c cdjpeg.c rdswitch.c transupp.c)
+add_executable(rdjpgcom rdjpgcom.c)
+add_executable(wrjpgcom wrjpgcom.c)
+target_link_libraries(cjpeg jpeg)
+target_link_libraries(djpeg jpeg)
+target_link_libraries(jpegtran jpeg)
 
-if(WIN32 AND BUILD_SHARED_LIBS)
-    # We add JPEG_DLL only to building of this target because bad things
-    # happen if it's enabled on all binary targets owing to the macros
-    # defined in jmorecfg.h
-    SET_TARGET_PROPERTIES(jpeg PROPERTIES COMPILE_FLAGS -DJPEG_DLL)
-ENDIF()
+install_executable(cjpeg djpeg jpegtran rdjpgcom wrjpgcom)
+install_library(jpeg)
+install_header(${JPEG_HEADERS})
+install_doc(
+	README install.txt usage.txt wizard.txt example.c libjpeg.txt
+	structure.txt coderules.txt filelist.txt change.log
+)
 
-
-#~ SET(JPEG_MANPAGES cjpeg.1 djpeg.1 jpegtran.1 rdjpgcom.1 wrjpgcom.1)
-
-ADD_EXECUTABLE(cjpeg cjpeg.c rdppm.c rdgif.c rdtarga.c rdrle.c rdbmp.c rdswitch.c cdjpeg.c)
-TARGET_LINK_LIBRARIES(cjpeg jpeg)
-
-ADD_EXECUTABLE(djpeg djpeg.c wrppm.c wrgif.c wrtarga.c wrrle.c wrbmp.c rdcolmap.c cdjpeg.c)
-TARGET_LINK_LIBRARIES(djpeg jpeg)
-
-ADD_EXECUTABLE(jpegtran jpegtran.c rdswitch.c cdjpeg.c transupp.c)
-TARGET_LINK_LIBRARIES(jpegtran jpeg)
-
-ADD_EXECUTABLE(rdjpgcom rdjpgcom.c)
-ADD_EXECUTABLE(wrjpgcom wrjpgcom.c)
-
-
-INSTALL(TARGETS jpeg RUNTIME DESTINATION ${INSTALL_BIN} LIBRARY DESTINATION ${INSTALL_LIB} ARCHIVE DESTINATION ${INSTALL_LIB})
-INSTALL(FILES ${JPEG_PUBLIC_HDRS} DESTINATION ${INSTALL_INC})
-INSTALL(TARGETS cjpeg djpeg jpegtran rdjpgcom wrjpgcom DESTINATION ${INSTALL_BIN})
-
-INSTALL(FILES 
-	change.log
-	coderules.txt
-	filelist.txt
-	libjpeg.txt
-	structure.txt
-	usage.txt
-	wizard.txt
-	README
-	DESTINATION ${INSTALL_DOC})
+# tests
+enable_testing()
+macro(mytest name target args input output)
+  get_target_property ( _cmdpath ${target} LOCATION )
+  add_test(${name} ${CMAKE_COMMAND}
+    "-DCOMMAND=${_cmdpath} ${args}" "-DINPUT=${input}" "-DOUTPUT=${output}"
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/jpeg_test.cmake)  
+endmacro()
+set(_src "${CMAKE_CURRENT_SOURCE_DIR}")
+mytest(t1 djpeg "-dct int -ppm -outfile testout.ppm ${_src}/testorig.jpg" "${_src}/testimg.ppm" testout.ppm)
+mytest(t2 djpeg "-dct int -bmp -colors 256 -outfile testout.bmp ${_src}/testorig.jpg" ${_src}/testimg.bmp testout.bmp)
+mytest(t3 cjpeg "-dct int -outfile testout.jpg ${_src}/testimg.ppm" ${_src}/testimg.jpg testout.jpg)
+mytest(t4 djpeg "-dct int -ppm -outfile testoutp.ppm ${_src}/testprog.jpg" ${_src}/testimg.ppm testoutp.ppm)
+mytest(t5 cjpeg "-dct int -progressive -opt -outfile testoutp.jpg ${_src}/testimg.ppm" ${_src}/testimgp.jpg testoutp.jpg)
+mytest(t6 jpegtran "-outfile testoutt.jpg ${_src}/testprog.jpg" ${_src}/testorig.jpg testoutt.jpg)
