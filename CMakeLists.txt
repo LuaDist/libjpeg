@@ -95,7 +95,7 @@ target_link_libraries(jpegtran jpeg)
 
 install_executable(cjpeg djpeg jpegtran rdjpgcom wrjpgcom)
 install_library(jpeg)
-install_header(${JPEG_HEADERS})
+install_header(${HEADERS})
 install_doc(
 	README install.txt usage.txt wizard.txt example.c libjpeg.txt
 	structure.txt coderules.txt filelist.txt change.log
