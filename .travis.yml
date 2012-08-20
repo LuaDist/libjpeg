@@ -2,47 +2,40 @@
 # LuaDist Travis-CI Hook
 #
 
-# Since CMake is not directly supported we use erlang VMs
-language: erlang
-
+# We assume C build environments
+language: C
+	
+# Try using multiple Lua Implementations
 env:
-  - TOOL=""
-  - TOOL="i686-w64-mingw32-"    # 32-bit mingw
-  - TOOL="x86_64-w64-mingw32-"  # 64-bit mingw
-  - TOOL="arm-linux-gnueabihf-" # ARM hard-float (hf), linux
-  - COMPILER="clang"            # clang
-# - TOOL="i586-mingw32msvc-"    # old 32-bit mingw
+  - TOOL=""                     # Use native compiler (GCC usually)
+  - COMPILER="clang"            # Use clang
+  - TOOL="i686-w64-mingw32"     # 32bit MinGW
+  - TOOL="x86_64-w64-mingw32"   # 64bit MinGW
+  - TOOL="arm-linux-gnueabihf"  # ARM hard-float (hf), linux
 
-# We need CMake and toolchains.
+# Crosscompile builds may fail
+matrix:
+  allow_failures:
+    - env: TOOL="i686-w64-mingw32"
+    - env: TOOL="x86_64-w64-mingw32"
+    - env: TOOL="arm-linux-gnueabihf"
+  
+# Install dependencies
 install:
-  - sudo apt-get -qq install cmake
-  - if [ "$TOOL" == "i586-mingw32msvc-" ]; then sudo apt-get -qq install gcc-mingw32; fi
-  - if [ "$TOOL" == "x86_64-w64-mingw32-" -o "$TOOL" == "i686-w64-mingw32-" ]; then sudo apt-get -qq install gcc-mingw-w64; fi
-  - if [ "$TOOL" == "arm-linux-gnueabihf-" ]; then sudo apt-get -qq install gcc-arm-linux-gnueabihf; fi
-  - if [ "$COMPILER" == "clang" ]; then sudo apt-get -qq install clang; export CC=clang; fi
-  - export TOOLFILE="$HOME/$TOOL.cmake"
-  - echo '' > $TOOLFILE
-  - echo "set(_toolchain $TOOL)" >> $TOOLFILE
-  - if [ "$TOOL" == "arm-linux-gnueabihf-" ]; then export SYSTEM="Linux"; else export SYSTEM="Windows"; fi
-  - echo "set(CMAKE_SYSTEM_NAME $SYSTEM)" >> $TOOLFILE
-  - echo 'set(CMAKE_C_COMPILER ${_toolchain}gcc)' >> $TOOLFILE
-  - echo 'set(CMAKE_CXX_COMPILER ${_toolchain}g++)' >> $TOOLFILE
-  - echo 'set(CMAKE_RC_COMPILER ${_toolchain}windres )' >> $TOOLFILE
-  - echo 'set(CMAKE_RC_OUTPUT_EXTENSION .obj)' >> $TOOLFILE
-  - echo 'set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> <DEFINES> <SOURCE> <OBJECT>")' >> $TOOLFILE
-  - echo 'set(CMAKE_FIND_ROOT_PATH /usr/${_toolchain}/ ${CMAKE_INSTALL_PREFIX})' >> $TOOLFILE
-  - echo 'set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> $TOOLFILE
-  - echo 'set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> $TOOLFILE
+  - git clone git://github.com/LuaDist/_util.git ~/_util
+  - ~/_util/travis install
 
+# Bootstap
+before_script:
+  - ~/_util/travis bootstrap
 
-# Use CMake to build module.
+# Build the module
 script:
-  - mkdir _build _install && cd _build
-  - if [ $TOOL ]; then export TOOLARG="-DCMAKE_TOOLCHAIN_FILE=$TOOLFILE"; fi
-  - cmake $TOOLARG -DCMAKE_INSTALL_PREFIX=../_install ..
-  - make
-  - if [ ! $TOOL ]; then make test; fi
-  - make install
+  - ~/_util/travis build
+
+# Execute additional tests or commands
+#after_script:
+#  - ~/_util/travis test
 
 # Only watch the master branch
 branches:
