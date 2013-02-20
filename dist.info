@@ -1,0 +1,45 @@
+type = "x86"
+arch = "Windows"
+author = "Tom Lane, Guido Vollbeding, Philip Gladstone, Bill Allombert, Jim Boucher, Lee Crocker, Bob Friesenhahn, Ben Jackson, Julian Minguillon, Luis Ortiz, George Phillips, Davide Rossi, Ge' Weijers, and other members of the Independent JPEG Group."
+desc = "Independent JPEG Group's JPEG software"
+name = "libjpeg"
+maintainer = "Peter Kapec"
+files = {
+Runtime = {
+[[bin\cjpeg.exe]],
+[[bin\djpeg.exe]],
+[[bin\jpegtran.exe]],
+[[bin\rdjpgcom.exe]],
+[[bin\wrjpgcom.exe]],
+[[bin\libjpeg.dll]],
+}
+,
+Documentation = {
+[[share\libjpeg\doc\README]],
+[[share\libjpeg\doc\install.txt]],
+[[share\libjpeg\doc\usage.txt]],
+[[share\libjpeg\doc\wizard.txt]],
+[[share\libjpeg\doc\example.c]],
+[[share\libjpeg\doc\libjpeg.txt]],
+[[share\libjpeg\doc\structure.txt]],
+[[share\libjpeg\doc\coderules.txt]],
+[[share\libjpeg\doc\filelist.txt]],
+[[share\libjpeg\doc\change.log]],
+}
+,
+Library = {
+[[lib\libjpeg.dll.a]],
+}
+,
+Header = {
+[[include\jerror.h]],
+[[include\jmorecfg.h]],
+[[include\jpeglib.h]],
+[[include\jconfig.h]],
+}
+,
+}
+
+license = "jpeg license"
+url = "http://www.ijg.org/"
+version = "8.4.0"
