@@ -33,9 +33,9 @@ set ( SRC jmemnobs.c jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolo
 
 if ( WIN32 )
   add_library ( jpeg STATIC ${SRC} ${HEADERS} )
-else
+else ( WIN32 )
   add_library ( jpeg ${SRC} ${HEADERS} )
-endif ( )
+endif ( WIN32 )
 
 add_executable ( cjpeg cdjpeg.c cjpeg.c rdbmp.c rdgif.c rdppm.c rdrle.c rdtarga.c 
   rdswitch.c )
