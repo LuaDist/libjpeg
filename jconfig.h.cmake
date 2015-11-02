@@ -95,6 +95,8 @@
   /* Define "boolean" as unsigned char, not int, per Windows custom */
   #ifndef __RPCNDR_H__		/* don't conflict if rpcndr.h already read */
   typedef unsigned char boolean;
+  #define TRUE 1
+  #define FALSE 0
   #endif
   #define HAVE_BOOLEAN		/* prevent jmorecfg.h from redefining it */
 #endif
