@@ -57,9 +57,9 @@ extern void free JPP((void *ptr));
  *      actually a printf format string; it must contain %s and %d.)
  *      Few people should need to do this.
  *
- *  3.  mktemp() is used to ensure that multiple processes running
+ *  3.  mkstemp() is used to ensure that multiple processes running
  *      simultaneously won't select the same file names.  If your system
- *      doesn't have mktemp(), define NO_MKTEMP to do it the hard way.
+ *      doesn't have mkstemp(), define NO_MKTEMP to do it the hard way.
  *      (If you don't have <errno.h>, also define NO_ERRNO_H.)
  *
  *  4.  You probably want to define NEED_SIGNAL_CATCHER so that cjpeg.c/djpeg.c
@@ -91,7 +91,7 @@ extern int errno;
 #endif
 
 
-LOCAL(void)
+LOCAL(FILE*)
 select_file_name (char * fname)
 {
   FILE * tfile;
@@ -113,22 +113,26 @@ select_file_name (char * fname)
     }
     fclose(tfile);		/* oops, it's there; close tfile & try again */
   }
+  return fopen(fname, RW_BINARY);
 }
 
 #else /* ! NO_MKTEMP */
 
-/* Note that mktemp() requires the initial filename to end in six X's */
+/* Note that mkstemp() requires the initial filename to end in six X's */
 #ifndef TEMP_FILE_NAME		/* can override from jconfig.h or Makefile */
 #define TEMP_FILE_NAME  "%sJPG%dXXXXXX"
 #endif
 
-LOCAL(void)
+LOCAL(FILE*)
 select_file_name (char * fname)
 {
+  int fd;
+
   next_file_num++;		/* advance counter */
   sprintf(fname, TEMP_FILE_NAME, TEMP_DIRECTORY, next_file_num);
-  mktemp(fname);		/* make sure file name is unique */
-  /* mktemp replaces the trailing XXXXXX with a unique string of characters */
+  /* mkstemp replaces the trailing XXXXXX with a unique string of characters */
+  fd = mkstemp(fname);		/* make sure file name is unique */
+  return fdopen(fd, RW_BINARY);
 }
 
 #endif /* NO_MKTEMP */
@@ -247,8 +251,8 @@ GLOBAL(void)
 jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 			 long total_bytes_needed)
 {
-  select_file_name(info->temp_name);
-  if ((info->temp_file = fopen(info->temp_name, RW_BINARY)) == NULL)
+  info->temp_file = select_file_name(info->temp_name);
+  if (info->temp_file == NULL)
     ERREXITS(cinfo, JERR_TFILE_CREATE, info->temp_name);
   info->read_backing_store = read_backing_store;
   info->write_backing_store = write_backing_store;
