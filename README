@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fharkue%2Flibjpeg.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fharkue%2Flibjpeg?ref=badge_shield)
+
 The Independent JPEG Group's JPEG software
 ==========================================
 
@@ -369,3 +371,7 @@ and is the first true source reference JPEG codec.
 More features are being prepared for coming releases...
 
 Please send bug reports, offers of help, etc. to jpeg-info@jpegclub.org.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fharkue%2Flibjpeg.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fharkue%2Flibjpeg?ref=badge_large)
