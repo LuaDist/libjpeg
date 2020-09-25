@@ -38,8 +38,13 @@ set ( SRC jmemnobs.c jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolo
 if ( BUILD_STATIC )
   add_library ( jpeg STATIC ${SRC} ${HEADERS} )
 else ()
-  add_library ( jpeg ${SRC} ${HEADERS} )
+  set(_orig_CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS})
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  add_library ( jpeg SHARED ${SRC} ${HEADERS} )
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${_orig_CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS})
 endif()
+
+set_target_properties(jpeg PROPERTIES DEBUG_POSTFIX "d")
 
 if ( BUILD_EXECUTABLES )
   add_executable ( cjpeg cdjpeg.c cjpeg.c rdbmp.c rdgif.c rdppm.c rdrle.c rdtarga.c 
