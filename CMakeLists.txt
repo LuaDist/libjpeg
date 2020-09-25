@@ -8,9 +8,16 @@ project ( libjpeg C )
 cmake_minimum_required ( VERSION 2.8 )
 include ( cmake/dist.cmake )
 
-OPTION(BUILD_STATIC OFF)
-OPTION(BUILD_EXECUTABLES ON)
-OPTION(BUILD_TESTS ON)
+# Public CMake configuration variables.
+option(JPEG_SHARED "Build shared lib" ON)
+option(JPEG_STATIC "Build static lib" ON)
+option(JPEG_EXECUTABLES "Build libjpeg executables" ON)
+option(JPEG_TESTS "Build libjpeg tests" ON)
+
+# Many more configuration options could be added here.
+
+# Distinguish between debug and release builds.
+set(CMAKE_DEBUG_POSTFIX "d")
 
 include ( CheckIncludeFile )
 check_include_file ( stddef.h HAVE_STDDEF_H )
@@ -35,18 +42,25 @@ set ( SRC jmemnobs.c jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolo
   jidctflt.c jidctfst.c jidctint.c jquant1.c jquant2.c jutils.c jmemmgr.c cderror.h 
   cdjpeg.h jdct.h jinclude.h jmemsys.h jpegint.h jversion.h transupp.h )
 
-if ( BUILD_STATIC )
-  add_library ( jpeg STATIC ${SRC} ${HEADERS} )
-else ()
+
+if ( JPEG_SHARED )
   set(_orig_CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS})
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   add_library ( jpeg SHARED ${SRC} ${HEADERS} )
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${_orig_CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS})
 endif()
 
-set_target_properties(jpeg PROPERTIES DEBUG_POSTFIX "d")
+if ( JPEG_STATIC )
+  add_library ( jpeg_static STATIC ${SRC} ${HEADERS} )
+  if(MSVC)
+    set_target_properties(jpeg_static PROPERTIES
+      OUTPUT_NAME "jpeg_static"
+      CLEAN_DIRECT_OUTPUT 1
+    )
+  endif()
+endif()
 
-if ( BUILD_EXECUTABLES )
+if ( JPEG_EXECUTABLES )
   add_executable ( cjpeg cdjpeg.c cjpeg.c rdbmp.c rdgif.c rdppm.c rdrle.c rdtarga.c 
     rdswitch.c )
   add_executable ( djpeg cdjpeg.c djpeg.c wrbmp.c wrgif.c wrppm.c wrrle.c wrtarga.c 
@@ -59,16 +73,24 @@ if ( BUILD_EXECUTABLES )
   target_link_libraries ( jpegtran jpeg )
 endif ()
 
-if ( BUILD_EXECUTABLES )
+if ( JPEG_EXECUTABLES )
   install_executable ( cjpeg djpeg jpegtran rdjpgcom wrjpgcom )
 endif ()
 
-install_library ( jpeg )
-install_header ( ${HEADERS} )
+if (JPEG_STATIC OR JPEG_SHARED)
+  if(JPEG_STATIC)
+    install_library ( jpeg )
+  endif()
+  if(JPEG_SHARED)
+    install_library ( jpeg_static )
+  endif()
+  install_header ( ${HEADERS} )
+endif()
 install_doc ( README install.txt usage.txt wizard.txt example.c libjpeg.txt structure.txt 
   coderules.txt filelist.txt change.log )
 
-if ( BUILD_TESTS )
+
+if ( JPEG_TESTS )
   # tests
   enable_testing ( )
   macro ( mytest name target args input output )
