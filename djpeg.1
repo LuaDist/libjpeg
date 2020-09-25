@@ -1,4 +1,4 @@
-.TH DJPEG 1 "23 November 2013"
+.TH DJPEG 1 "28 April 2019"
 .SH NAME
 djpeg \- decompress a JPEG file to an image file
 .SH SYNOPSIS
@@ -16,7 +16,8 @@ djpeg \- decompress a JPEG file to an image file
 decompresses the named JPEG file, or the standard input if no file is named,
 and produces an image file on the standard output.  PBMPLUS (PPM/PGM), BMP,
 GIF, Targa, or RLE (Utah Raster Toolkit) output format can be selected.
-(RLE is supported only if the URT library is available.)
+(RLE is supported only if the URT library is available, which it isn't
+on most non-Unix systems.)
 .SH OPTIONS
 All switch names may be abbreviated; for example,
 .B \-grayscale
@@ -55,10 +56,15 @@ default options are chosen for highest quality output.)  Currently, this is
 equivalent to \fB\-dct fast \-nosmooth \-onepass \-dither ordered\fR.
 .TP
 .B \-grayscale
-Force gray-scale output even if JPEG file is color.  Useful for viewing on
-monochrome displays; also,
+Force grayscale output even if JPEG file is color.
+Useful for viewing on monochrome displays; also,
 .B djpeg
 runs noticeably faster in this mode.
+.TP
+.B \-rgb
+Force RGB output even if JPEG file is grayscale.
+This is provided to support applications that don't
+want to cope with grayscale as a separate case.
 .TP
 .BI \-scale " M/N"
 Scale the output image by a factor M/N.  Currently supported scale factors are
@@ -71,31 +77,42 @@ Scaling is handy if the image is larger than your screen; also,
 runs much faster when scaling down the output.
 .TP
 .B \-bmp
-Select BMP output format (Windows flavor).  8-bit colormapped format is
-emitted if
+Select BMP output format (Windows flavor).
+8-bit colormapped format is emitted if
 .B \-colors
 or
 .B \-grayscale
-is specified, or if the JPEG file is gray-scale; otherwise, 24-bit full-color
+is specified, or if the JPEG file is grayscale; otherwise, 24-bit full-color
 format is emitted.
 .TP
 .B \-gif
-Select GIF output format.  Since GIF does not support more than 256 colors,
+Select GIF output format (LZW compressed).
+Since GIF does not support more than 256 colors,
 .B \-colors 256
-is assumed (unless you specify a smaller number of colors).
+is assumed (unless you specify a smaller number of colors).  If you specify
+.BR \-fast ,
+the default number of colors is 216.
+.TP
+.B \-gif0
+Select GIF output format (uncompressed).
+Since GIF does not support more than 256 colors,
+.B \-colors 256
+is assumed (unless you specify a smaller number of colors).  If you specify
+.BR \-fast ,
+the default number of colors is 216.
 .TP
 .B \-os2
-Select BMP output format (OS/2 1.x flavor).  8-bit colormapped format is
-emitted if
+Select BMP output format (OS/2 1.x flavor).
+8-bit colormapped format is emitted if
 .B \-colors
 or
 .B \-grayscale
-is specified, or if the JPEG file is gray-scale; otherwise, 24-bit full-color
+is specified, or if the JPEG file is grayscale; otherwise, 24-bit full-color
 format is emitted.
 .TP
 .B \-pnm
 Select PBMPLUS (PPM/PGM) output format (this is the default format).
-PGM is emitted if the JPEG file is gray-scale or if
+PGM is emitted if the JPEG file is grayscale or if
 .B \-grayscale
 is specified; otherwise PPM is emitted.
 .TP
@@ -103,8 +120,8 @@ is specified; otherwise PPM is emitted.
 Select RLE output format.  (Requires URT library.)
 .TP
 .B \-targa
-Select Targa output format.  Gray-scale format is emitted if the JPEG file is
-gray-scale or if
+Select Targa output format.  Grayscale format is emitted if the JPEG file is
+grayscale or if
 .B \-grayscale
 is specified; otherwise, colormapped format is emitted if
 .B \-colors
@@ -162,7 +179,7 @@ faster and needs less memory, but it produces a lower-quality image.
 is ignored unless you also say
 .B \-colors
 .IR N .
-Also, the one-pass method is always used for gray-scale output (the two-pass
+Also, the one-pass method is always used for grayscale output (the two-pass
 method is no improvement then).
 .TP
 .BI \-maxmemory " N"
@@ -245,8 +262,3 @@ Wallace, Gregory K.  "The JPEG Still Picture Compression Standard",
 Communications of the ACM, April 1991 (vol. 34, no. 4), pp. 30-44.
 .SH AUTHOR
 Independent JPEG Group
-.SH BUGS
-To avoid the Unisys LZW patent (now expired),
-.B djpeg
-produces uncompressed GIF files.  These are larger than they should be, but
-are readable by standard GIF decoders.
